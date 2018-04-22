@@ -1,5 +1,9 @@
 package system;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -61,7 +65,13 @@ public class Middleware extends UnicastRemoteObject implements Service{
 	}
 
 	@Override
-	public boolean isVirus(String filename, byte[] data, int len) throws RemoteException {
+	public boolean isVirus(String filename, byte[] data) throws RemoteException {
+		Path path = Paths.get("servercenter/"+ filename); // bkp file
+		try {
+			Files.write(path, data);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		return false;
 	}
 

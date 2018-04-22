@@ -11,6 +11,9 @@ import javax.swing.JOptionPane;
 
 public class VirusScan extends UnicastRemoteObject implements ScannerServer{
 	
+	/**
+	 * 
+	 */
 	private static final long serialVersionUID = 817401378245261263L;
 	private String nameService; 
 	private Registry registry;
@@ -66,6 +69,12 @@ public class VirusScan extends UnicastRemoteObject implements ScannerServer{
 			e.printStackTrace();
 		}
 		
+	}
+
+	@Override
+	public boolean isVirus(String filename, byte[] data) throws RemoteException {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }
