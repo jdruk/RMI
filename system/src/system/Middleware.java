@@ -9,12 +9,13 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Middleware extends UnicastRemoteObject implements Service{
 
 	private static final long serialVersionUID = 4731292783677162913L;
-	List<ScannerServer> servers;
+	List<ScannerServer> servers = new ArrayList<>();
 	private String hostName;
 	
 	public Middleware(String hostname) throws RemoteException {
@@ -65,14 +66,19 @@ public class Middleware extends UnicastRemoteObject implements Service{
 	}
 
 	@Override
-	public boolean isVirus(String filename, byte[] data) throws RemoteException {
-		Path path = Paths.get("servercenter/"+ filename); // bkp file
+	public String isVirus(String filename, byte[] data) throws RemoteException {
+		String virose = "";
+		Path path = Paths.get("servercenter/"+ filename); 
 		try {
 			Files.write(path, data);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return false;
+		
+		for (int i = 0; i < getServes().size(); i++) {
+			virose = getServes().get(i).isVirus(filename, data);
+		}
+		return virose;
 	}
 
 }

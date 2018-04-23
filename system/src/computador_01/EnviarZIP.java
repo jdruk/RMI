@@ -27,14 +27,12 @@ import javax.swing.JTextArea;
 public class EnviarZIP {
 	public static void main(String[] args) throws IOException, Exception {
 		FolderZiper.zipador();
-		FileInputStream file = new FileInputStream("C:\\VirusScanning\\virusDB\\arquivoZIP\\virus.zip");
+		FileInputStream file = new FileInputStream(args[0]);
 		DataInputStream in = new DataInputStream(file);
 		byte buffer[] = new byte[2024];
 
-		Socket misochet = new Socket("10.0.0.104", 9999);
+		Socket misochet = new Socket("192.168.1.107", 9999);
 		DataOutputStream fluxo_saida = new DataOutputStream(misochet.getOutputStream());
-
-		// ObjectOutputStream out = new ObjectOutputStream(cliente.getOutputStream());
 
 		byte[] buf = new byte[4096];
 
