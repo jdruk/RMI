@@ -126,4 +126,9 @@ public class VirusScan extends UnicastRemoteObject implements ScannerServer{
 		return virose;
 	}
 
+	@Override
+	public String getName() throws RemoteException {
+		return getNameService();
+	}
+
 }

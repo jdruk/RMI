@@ -9,4 +9,6 @@ public interface ScannerServer extends Remote, Uploaders {
 	
 	void shutdown() throws RemoteException;
 	
+	String getName() throws RemoteException;
+	
 } 

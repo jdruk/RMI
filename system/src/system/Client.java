@@ -22,16 +22,7 @@ public class Client {
 	}
 
 	public static void main(String[] args) {
-		String host = JOptionPane.showInputDialog("Ip servidor principal");
-		File file = Client.selectFile();
-		byte[] data = Client.convertToBytes(file);
-		Windows clientWindow = new Windows("Cliente inicializado..");
-		try {
-			String response = Client.getConnectionServer(host).isVirus(file.getName(), data);
-			clientWindow.getStatus().append(response);
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		}
+		
 
 	}
 
@@ -40,9 +31,9 @@ public class Client {
 		try {
 			Registry registry = LocateRegistry.getRegistry(host, 20000);
 			stub = (Service) registry.lookup("Hello");
-			String response = stub.getName();
-			stub.addServer("localhost", "pequeno", 8000);
-			System.out.println(response);
+			//String response = stub.getName();
+			//stub.addServer("localhost", "pequeno", 8000);
+			//System.out.println(response);
 			//stub.getServes().add(e)
 		} catch (Exception e) {
 			System.err.println("Client exception: " + e.toString());
