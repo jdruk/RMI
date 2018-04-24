@@ -10,12 +10,15 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 public class Middleware extends UnicastRemoteObject implements Service{
 
 	private static final long serialVersionUID = 4731292783677162913L;
 	List<ScannerServer> servers = new ArrayList<>();
+	HashMap<String, String> statusServers = new HashMap<>();
 	private String hostName;
 	
 	public Middleware(String hostname) throws RemoteException {
@@ -45,8 +48,10 @@ public class Middleware extends UnicastRemoteObject implements Service{
 	@Override
 	public void addServer(String hostName, String nameService, int port) throws RemoteException {
 		ScannerServer stub = getConnectionScannerServer(hostName, nameService, port);
-        if(stub != null)
+        if(stub != null) {
         	servers.add(stub);
+        	statusServers.put(stub.getName(), "Online");
+        }
 	}
 	
 	private ScannerServer getConnectionScannerServer(String hostName, String nameService, int port) {
@@ -79,6 +84,26 @@ public class Middleware extends UnicastRemoteObject implements Service{
 			virose = getServes().get(i).isVirus(filename, data);
 		}
 		return virose;
+	}
+
+	@Override
+	public HashMap<String, String> statusServers() {
+		Iterator<String> it = statusServers.keySet().iterator();
+		HashMap<String, String> list = new HashMap<>();
+		while(it.hasNext()){
+            String key = (String)it.next();
+            list.put(key, "OFF");
+        }
+		for (int i = 0; i < servers.size(); i++) {
+			try {
+				servers.get(i).ping();
+				list.put(servers.get(i).getName(), "Online");
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+		}
+		return list;
+		
 	}
 
 }

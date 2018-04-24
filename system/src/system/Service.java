@@ -2,6 +2,7 @@ package system;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.HashMap;
 import java.util.List;
 
 public interface Service extends Remote, Uploaders {
@@ -12,4 +13,6 @@ public interface Service extends Remote, Uploaders {
     void addServer(String serverName, String nameService, int port) throws RemoteException;
     
     void shutdownServer(ScannerServer serverName) throws RemoteException;
+
+	HashMap<String, String> statusServers() throws RemoteException;
 }

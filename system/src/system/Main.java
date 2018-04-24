@@ -14,7 +14,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.rmi.RemoteException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.border.LineBorder;
@@ -86,16 +89,25 @@ public class Main {
 					@Override
 					public void run() {
 						while (true) {
+							
 							try {
-								List<ScannerServer> servers = stub.getServes();
+								Thread.sleep(5000);
+								HashMap<String, String> servers = stub.statusServers();
 								String[] nameColumns = {"Servidor", "status"};
-								Object[][] list = new Object[servers.size()][2];
-								for (int i = 0; i < servers.size(); i++) {
-									list[i][0] = servers.get(i).getName();
-									list[i][1] = "ativo";
+								if (servers.size() >= 1) {
+									Object[][] list = new Object[servers.size()][2];
+									int index = 0;
+									Set<String> chaves = servers.keySet();
+									for (String chave : chaves){
+										if(chave != null) {
+											list[index][0] = chave;
+											list[index][1] = servers.get(chave);
+											index++;
+										}
+									}
+									table.setModel(new DefaultTableModel(list, nameColumns));
 								}
-								table.setModel(new DefaultTableModel(list, nameColumns));
-							} catch (RemoteException e) {
+							} catch (RemoteException | InterruptedException e) {
 								e.printStackTrace();
 							}
 						}
