@@ -70,7 +70,7 @@ public class Main {
 		
 		
 		table = new JTable();
-		table.setEnabled(false);
+		table.setColumnSelectionAllowed(true);
 		table.setBorder(new LineBorder(new Color(0, 0, 0)));
 		
 		table.setBounds(117, 11, 200, 250);
@@ -144,6 +144,18 @@ public class Main {
 		frmCliente.getContentPane().add(btnAdicionarSserver);
 		
 		JButton btnExcluir = new JButton("Excluir");
+		btnExcluir.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String host = (String) table.getValueAt(table.getSelectedRow(), 0);
+				try {
+					stub.shutdownServer(host);
+				} catch (RemoteException e1) {
+					e1.printStackTrace();
+				}
+			}
+		});
 		btnExcluir.setBounds(317, 48, 89, 23);
 		frmCliente.getContentPane().add(btnExcluir);
 		

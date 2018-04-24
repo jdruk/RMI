@@ -22,15 +22,15 @@ import javax.swing.JOptionPane;
 import computador_01.EnviarZIP;
 import computador_01.FolderZiper;
 
-public class VirusScan extends UnicastRemoteObject implements ScannerServer{
-	
+public class VirusScan extends UnicastRemoteObject implements ScannerServer {
+
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 817401378245261263L;
-	private String nameService; 
+	private String nameService;
 	private Registry registry;
-	
+
 	public String getNameService() {
 		return nameService;
 	}
@@ -40,7 +40,7 @@ public class VirusScan extends UnicastRemoteObject implements ScannerServer{
 	}
 
 	public static void main(String[] args) {
-		
+
 		String port = JOptionPane.showInputDialog("Porta Servidor Scanner");
 		String nameServer = JOptionPane.showInputDialog("Nome Servidor Scanner");
 		Registry registry;
@@ -50,7 +50,7 @@ public class VirusScan extends UnicastRemoteObject implements ScannerServer{
 			service = new VirusScan(nameServer, registry);
 			registry.bind(service.getNameService(), service);
 			System.out.println("Servidor scanner ativado");
-			
+
 		} catch (RemoteException | AlreadyBoundException e) {
 			e.printStackTrace();
 		}
@@ -68,37 +68,31 @@ public class VirusScan extends UnicastRemoteObject implements ScannerServer{
 	}
 
 	public boolean isVirus(String filename, byte[] data, int len) throws RemoteException {
-		
+
 		return false;
 	}
 
 	@Override
 	public void shutdown() throws RemoteException {
-		try {
-			System.out.println("Shutdown...");
-			this.registry.unbind(getNameService());
-			System.out.println("Server "+ getNameService() + " OFF");
-			System.exit(0);
-		} catch (NotBoundException e) {
-			e.printStackTrace();
-		}
-		
+		System.out.println("Shutdown...");
+		System.out.println("Server " + getNameService() + " OFF");
+		System.exit(0);
 	}
 
 	@Override
 	public String isVirus(String filename, byte[] data) throws RemoteException {
 		String virose = null;
-		Path path = Paths.get("scanone/"+ filename); 
+		Path path = Paths.get("scanone/" + filename);
 		try {
 			Files.write(path, data);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		FileInputStream file = null;
 		try {
 			FolderZiper.zipador();
-			file = new FileInputStream("scanone/"+ filename);
+			file = new FileInputStream("scanone/" + filename);
 			DataInputStream in = new DataInputStream(file);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -112,13 +106,13 @@ public class VirusScan extends UnicastRemoteObject implements ScannerServer{
 			misochet = new Socket("192.168.1.107", 9999);
 			DataOutputStream fluxo_saida = new DataOutputStream(misochet.getOutputStream());
 			byte[] buf = new byte[4096];
-			
+
 			while (true) {
 				int len = file.read(buf);
 				if (len == -1)
 					break;
 				fluxo_saida.write(buf, 0, len);
-				
+
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

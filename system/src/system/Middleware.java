@@ -66,8 +66,17 @@ public class Middleware extends UnicastRemoteObject implements Service{
 	}
 
 	@Override
-	public void shutdownServer(ScannerServer server) throws RemoteException {
-		server.shutdown();
+	public void shutdownServer(String server) throws RemoteException {
+		for (int i = 0; i < servers.size(); i++) {
+			if(servers.get(i).getName().equals(server)) {
+				String s = statusServers.remove(server);
+				statusServers.remove(server, s);
+				statusServers.put(server, "Desligado");
+				servers.get(i).shutdown();
+				servers.remove(i);
+				System.out.println(server);
+			}
+		}
 	}
 
 	@Override

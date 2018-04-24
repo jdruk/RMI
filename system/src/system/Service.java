@@ -12,7 +12,7 @@ public interface Service extends Remote, Uploaders {
     
     void addServer(String serverName, String nameService, int port) throws RemoteException;
     
-    void shutdownServer(ScannerServer serverName) throws RemoteException;
+    void shutdownServer(String serverName) throws RemoteException;
 
 	HashMap<String, String> statusServers() throws RemoteException;
 }
