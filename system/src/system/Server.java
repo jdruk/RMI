@@ -32,7 +32,7 @@ public class Server  {
             Registry registry = LocateRegistry.createRegistry(20000);
             registry.bind("Hello", service);
 
-            System.err.println("Server ready");
+            System.err.println("Server middleware online");
         } catch (Exception e) {
             System.err.println("Server exception: " + e.toString());
             e.printStackTrace();

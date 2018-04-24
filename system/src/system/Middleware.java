@@ -1,5 +1,7 @@
 package system;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,13 +14,18 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
+import java.util.Queue;
+import java.util.concurrent.CountDownLatch;
 
 public class Middleware extends UnicastRemoteObject implements Service{
 
 	private static final long serialVersionUID = 4731292783677162913L;
 	List<ScannerServer> servers = new ArrayList<>();
-	HashMap<String, String> statusServers = new HashMap<>();
+	//HashMap<String, String> statusServers = new HashMap<>();
+	LinkedList <String> fifo = new LinkedList<String>();
 	private String hostName;
 	
 	public Middleware(String hostname) throws RemoteException {
@@ -50,7 +57,7 @@ public class Middleware extends UnicastRemoteObject implements Service{
 		ScannerServer stub = getConnectionScannerServer(hostName, nameService, port);
         if(stub != null) {
         	servers.add(stub);
-        	statusServers.put(stub.getName(), "Online");
+        	fifo.add(hostName+";"+stub.getName());
         }
 	}
 	
@@ -68,13 +75,14 @@ public class Middleware extends UnicastRemoteObject implements Service{
 	@Override
 	public void shutdownServer(String server) throws RemoteException {
 		for (int i = 0; i < servers.size(); i++) {
-			if(servers.get(i).getName().equals(server)) {
-				String s = statusServers.remove(server);
-				statusServers.remove(server, s);
-				statusServers.put(server, "Desligado");
-				servers.get(i).shutdown();
-				servers.remove(i);
-				System.out.println(server);
+			System.out.println(server.split(";")[1] );
+			try {
+				if(servers.get(i).getName().equals(server.split(";")[1])) {
+					servers.get(i).shutdown();
+					servers.remove(i);
+					System.out.println(server);
+				}
+			} catch (Exception e) {
 			}
 		}
 	}
@@ -83,36 +91,141 @@ public class Middleware extends UnicastRemoteObject implements Service{
 	public String isVirus(String filename, byte[] data) throws RemoteException {
 		String virose = "";
 		Path path = Paths.get("servercenter/"+ filename); 
+		
 		try {
 			Files.write(path, data);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
-		for (int i = 0; i < getServes().size(); i++) {
-			virose = getServes().get(i).isVirus(filename, data);
+		if(isSendParaleloActive()) {
+			if (getServes().size() >0 ) {
+				CountDownLatch c = new CountDownLatch(getServes().size());
+				for (int i = 0; i < getServes().size(); i++) 
+					new Thread(new SendFile(getServes().get(i), c, filename, data));
+				try {
+					c.await();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		} else {
+			for (int i = 0; i < getServes().size(); i++) {
+				virose = getServes().get(i).isVirus(filename, data);
+			}
 		}
+		
 		return virose;
+	}
+
+	private boolean isSendParaleloActive() {
+		Properties props = new Properties();
+		try {
+			FileInputStream file = new FileInputStream(
+					"dados.properties");
+			props.load(file);
+			boolean returnVal = Boolean.parseBoolean(props.getProperty("enviar.paralelo"));
+			return returnVal;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return false;
 	}
 
 	@Override
 	public HashMap<String, String> statusServers() {
-		Iterator<String> it = statusServers.keySet().iterator();
+		//Iterator<String> it = statusServers.keySet().iterator();
 		HashMap<String, String> list = new HashMap<>();
-		while(it.hasNext()){
-            String key = (String)it.next();
-            list.put(key, "OFF");
-        }
-		for (int i = 0; i < servers.size(); i++) {
+		LinkedList list2 = (LinkedList) fifo.clone();
+		if (servers.size() > 0) {
+			CountDownLatch count = new CountDownLatch(servers.size());
+			ArrayList<Process> child = new ArrayList<>();
+			for (int i = 0; i < servers.size(); i++) {
+				child.add(new Process(servers.get(i),(String) list2.remove(), count));
+				new Thread(child.get(i)).start();
+			}
 			try {
-				servers.get(i).ping();
-				list.put(servers.get(i).getName(), "Online");
-			} catch (RemoteException e) {
+				count.await();
+				for (int i = 0; i < child.size(); i++) {
+					list.put(child.get(i).getNameServer(), child.get(i).getStatus());
+				}
+			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
+		
 		return list;
 		
 	}
-
+	
+	
 }
+
+class SendFile implements Runnable {
+
+	ScannerServer s;
+	CountDownLatch c;
+	String filename;
+	byte[] data;
+	
+	public SendFile (ScannerServer s,CountDownLatch count, String filename, byte[] data) {
+		this.s = s;
+		c = count;
+	}
+	
+	@Override
+	public void run() {
+		c.countDown();
+		try {
+			s.isVirus(filename, data);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
+	
+}
+
+class Process implements Runnable{
+	
+	private ScannerServer s;
+	private String nameServer;
+	
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+	private String status;
+	
+	public synchronized String getNameServer() {
+		return nameServer;
+	}
+
+	public synchronized void setNameServer(String nameServer) {
+		this.nameServer = nameServer;
+	}
+
+	CountDownLatch  c;
+	public  Process(ScannerServer s, String name, CountDownLatch count) {
+		this.s =s;
+		c = count;
+		nameServer = name;
+	}
+
+	@Override
+	public synchronized void run() {
+		try {
+			c.countDown();
+			s.ping();
+			this.setStatus("Online");
+		} catch (RemoteException e) {
+			this.setStatus("OFF");
+		}
+	}
+}
+
+

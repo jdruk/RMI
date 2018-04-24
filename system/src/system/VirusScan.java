@@ -49,7 +49,7 @@ public class VirusScan extends UnicastRemoteObject implements ScannerServer {
 			registry = LocateRegistry.createRegistry(Integer.parseInt(port));
 			service = new VirusScan(nameServer, registry);
 			registry.bind(service.getNameService(), service);
-			System.out.println("Servidor scanner ativado");
+			System.out.println("Servidor scanner ativado " + nameServer + " porta " + port);
 
 		} catch (RemoteException | AlreadyBoundException e) {
 			e.printStackTrace();
